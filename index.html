@@ -8,11 +8,343 @@
     <meta property="og:description" content="Таны бизнесийг онлайнд гаргая. Мэргэжлийн вэбсайт, AI chatbot захиалгаар.">
     <meta property="og:type" content="website">
     <title>ScaleX — Монголын Дижитал Ирээдүй</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+      /* ── LOADER ─────────────────────────────────────────── */
+      #loader {
+        position: fixed;
+        inset: 0;
+        background: #0a0614;
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s, visibility 0.5s;
+      }
+      #loader.done {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .loader-stage {
+        position: absolute;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .loader-stage.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* STAGE 1: Code typing */
+      .code-block {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        line-height: 1.9;
+        text-align: left;
+        color: #f0eeff;
+        width: 480px;
+        max-width: 90vw;
+        padding: 32px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(168,85,247,0.2);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        position: relative;
+      }
+      .code-block::before {
+        content: '● ● ●';
+        position: absolute;
+        top: 12px;
+        left: 16px;
+        font-size: 10px;
+        letter-spacing: 4px;
+        color: rgba(168,85,247,0.5);
+      }
+      .code-line {
+        white-space: nowrap;
+        overflow: hidden;
+        width: 0;
+        opacity: 0;
+        border-right: 2px solid #a855f7;
+        margin-top: 16px;
+      }
+      .code-line.typed {
+        animation: typewriter 0.2s steps(40, end) forwards, fadeIn 0.05s forwards;
+      }
+      .code-line.typed.done {
+        border-right: none;
+      }
+      .code-tag   { color: #e0187a; }
+      .code-attr  { color: #a855f7; }
+      .code-str   { color: #00ff88; }
+      .code-comment { color: rgba(240,238,255,0.4); font-style: italic; }
+
+      @keyframes typewriter {
+        from { width: 0; }
+        to   { width: 100%; }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+
+      /* STAGE 2: Wireframe */
+      .wf-container {
+        position: relative;
+        width: 400px;
+        max-width: 90vw;
+        height: 320px;
+      }
+      .wf-block {
+        position: absolute;
+        background: rgba(168,85,247,0.08);
+        border: 1.5px solid rgba(168,85,247,0.3);
+        border-radius: 8px;
+        opacity: 0;
+        animation: wfAppear 0.4s ease forwards;
+      }
+      .wf-hero {
+        width: 100%;
+        height: 80px;
+        top: 0;
+        animation-delay: 0s;
+      }
+      .wf-btn {
+        width: 120px;
+        height: 36px;
+        top: 96px;
+        border-radius: 100px;
+        background: linear-gradient(135deg, #e0187a, #a855f7);
+        border-color: transparent;
+        animation-delay: 0.1s;
+      }
+      .wf-card {
+        width: calc(33.33% - 10px);
+        height: 180px;
+        bottom: 0;
+      }
+      .wf-card-1 { left: 0;                    animation-delay: 0.2s; }
+      .wf-card-2 { left: calc(33.33% + 5px);   animation-delay: 0.3s; }
+      .wf-card-3 { right: 0;                   animation-delay: 0.4s; }
+
+      @keyframes wfAppear {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* STAGE 3: Logo */
+      .loader-logo {
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 4.5rem;
+        letter-spacing: -0.04em;
+        text-align: center;
+        color: #f0eeff;
+        filter: drop-shadow(0 0 20px rgba(224,24,122,0.4));
+        animation: logoIn 0.6s cubic-bezier(.16,1,.3,1) forwards;
+      }
+      .loader-logo .logo-x {
+        background: linear-gradient(135deg, #e0187a, #a855f7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+        animation: xGlow 1s ease-in-out infinite alternate;
+      }
+      .loader-tag {
+        margin-top: 12px;
+        font-size: 0.85rem;
+        color: rgba(240,238,255,0.5);
+        letter-spacing: 6px;
+        text-transform: uppercase;
+        text-align: center;
+        animation: fadeIn 0.4s 0.3s forwards;
+        opacity: 0;
+      }
+      .loader-progress {
+        width: 200px;
+        height: 2px;
+        background: rgba(255,255,255,0.05);
+        margin: 32px auto 0;
+        border-radius: 100px;
+        overflow: hidden;
+        animation: fadeIn 0.4s 0.5s forwards;
+        opacity: 0;
+      }
+      .loader-progress-fill {
+        width: 0;
+        height: 100%;
+        background: linear-gradient(90deg, #e0187a, #a855f7);
+        animation: progressFill 0.6s 0.5s ease forwards;
+      }
+
+      @keyframes logoIn {
+        from {
+          opacity: 0;
+          transform: scale(0.85);
+          filter: blur(10px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+          filter: blur(0);
+        }
+      }
+      @keyframes xGlow {
+        from { filter: drop-shadow(0 0 10px rgba(224,24,122,0.6)); }
+        to   { filter: drop-shadow(0 0 30px rgba(168,85,247,0.8)); }
+      }
+      @keyframes progressFill {
+        to { width: 100%; }
+      }
+
+      /* Mobile: faster */
+      @media (max-width: 768px) {
+        .code-block {
+          font-size: 11px;
+          padding: 20px;
+        }
+        .loader-logo {
+          font-size: 3rem;
+        }
+        .code-line.typed {
+          animation-duration: 0.1s;
+        }
+      }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .loader-stage,
+        .code-line,
+        .wf-block,
+        .loader-logo,
+        .loader-tag,
+        .loader-progress {
+          animation: none !important;
+          opacity: 1 !important;
+          transition: none !important;
+        }
+        #loader {
+          transition: opacity 0.2s;
+        }
+      }
+      /* ── /LOADER ────────────────────────────────────────── */
+    </style>
   </head>
   <body>
+
+    <!-- ── LOADER ─────────────────────────────────────────── -->
+    <div id="loader">
+
+      <!-- Stage 1: Code typing -->
+      <div id="loader-code" class="loader-stage active">
+        <div class="code-block">
+          <div class="code-line"><span class="code-tag">&lt;!DOCTYPE</span> html<span class="code-tag">&gt;</span></div>
+          <div class="code-line"><span class="code-tag">&lt;html</span> <span class="code-attr">lang</span>=<span class="code-str">"mn"</span><span class="code-tag">&gt;</span></div>
+          <div class="code-line">&nbsp;&nbsp;<span class="code-tag">&lt;head&gt;</span></div>
+          <div class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-tag">&lt;title&gt;</span>ScaleX<span class="code-tag">&lt;/title&gt;</span></div>
+          <div class="code-line">&nbsp;&nbsp;<span class="code-tag">&lt;/head&gt;</span></div>
+          <div class="code-line">&nbsp;&nbsp;<span class="code-tag">&lt;body&gt;</span></div>
+          <div class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// Building...</span></div>
+          <div class="code-line">&nbsp;&nbsp;<span class="code-tag">&lt;/body&gt;</span></div>
+          <div class="code-line"><span class="code-tag">&lt;/html&gt;</span></div>
+        </div>
+      </div>
+
+      <!-- Stage 2: Wireframe -->
+      <div id="loader-wireframe" class="loader-stage">
+        <div class="wf-container">
+          <div class="wf-block wf-hero"></div>
+          <div class="wf-block wf-btn"></div>
+          <div class="wf-block wf-card wf-card-1"></div>
+          <div class="wf-block wf-card wf-card-2"></div>
+          <div class="wf-block wf-card wf-card-3"></div>
+        </div>
+      </div>
+
+      <!-- Stage 3: Final logo -->
+      <div id="loader-final" class="loader-stage">
+        <div class="loader-logo">Scale<span class="logo-x">X</span></div>
+        <div class="loader-tag">AI Agency</div>
+        <div class="loader-progress">
+          <div class="loader-progress-fill"></div>
+        </div>
+      </div>
+
+    </div>
+    <!-- ── /LOADER ────────────────────────────────────────── -->
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      window.addEventListener('load', () => {
+        const stage1 = document.getElementById('loader-code');
+        const stage2 = document.getElementById('loader-wireframe');
+        const stage3 = document.getElementById('loader-final');
+        const loader = document.getElementById('loader');
+        const codeLines = document.querySelectorAll('.code-line');
+
+        // Mobile detection
+        const isMobile = window.innerWidth <= 768;
+        const speedMultiplier = isMobile ? 0.6 : 1;
+
+        // Stage 1: Type code lines sequentially
+        codeLines.forEach((line, i) => {
+          setTimeout(() => {
+            line.classList.add('typed');
+            setTimeout(() => line.classList.add('done'), 200);
+          }, i * 130 * speedMultiplier);
+        });
+
+        // Stage 1 → Stage 2
+        const stage1End = 1500 * speedMultiplier;
+        setTimeout(() => {
+          stage1.classList.remove('active');
+          setTimeout(() => stage2.classList.add('active'), 200);
+        }, stage1End);
+
+        // Stage 2 → Stage 3
+        const stage2End = stage1End + 700 * speedMultiplier;
+        setTimeout(() => {
+          stage2.classList.remove('active');
+          setTimeout(() => stage3.classList.add('active'), 200);
+        }, stage2End);
+
+        // Stage 3 → Done (hide loader, trigger hero animations)
+        const stage3End = stage2End + 1100 * speedMultiplier;
+        setTimeout(() => {
+          loader.classList.add('done');
+
+          const items = [
+            { el: document.getElementById('heroBadge'),   delay: 100 },
+            { el: document.getElementById('heroTitle'),   delay: 250 },
+            { el: document.getElementById('heroSub'),     delay: 400 },
+            { el: document.getElementById('heroButtons'), delay: 550 },
+            { el: document.getElementById('scrollInd'),   delay: 750 },
+          ];
+          items.forEach(({ el, delay }) => {
+            if (el) {
+              setTimeout(() => {
+                el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+                el.style.opacity    = '1';
+                el.style.transform  = 'none';
+              }, delay);
+            }
+          });
+        }, stage3End);
+      });
+    </script>
+
   </body>
 </html>
-
